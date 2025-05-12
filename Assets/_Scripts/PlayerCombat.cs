@@ -1,17 +1,23 @@
+using UnityEditor.Rendering.LookDev;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class PlayerCombat : MonoBehaviour
 {
     [SerializeField] private Animator animator;
     
-    public Transform attackPoint;
-    public float attackRange = 1f;
-    public int attackDamage = 20;
+    //Attack
+    public Transform attackPoint; 
     public LayerMask enemyLayers;
+    
+    public int attackDamage = 20; 
+    public float attackRange = 1f;
+    
     public float attackRate = 1f;
     float nextAttackTime = 0f;
-
-    private const string IS_ATTACK_PARAM = "IsAttack";
+    
+    //Animation Parameters
+    private const string IS_ATTACK_PARAM = "Attack";
 
     void Update()
     {
@@ -24,19 +30,23 @@ public class PlayerCombat : MonoBehaviour
             }
         }
         
-        Debug.DrawRay(attackPoint.position, attackPoint.forward * attackRange, Color.red,3f);
+        //Debug.DrawRay(attackPoint.position, attackPoint.forward * attackRange, Color.red,3f);
     }
     
     void Attack()
     {
+        //Detect enemies in range
         Collider[] hitEnemies = Physics.OverlapSphere(attackPoint.position, attackRange, enemyLayers);
+        
+        //Damage
         foreach (Collider enemy in hitEnemies)
         {
             enemy.GetComponent<EnemyHealth>()?.TakeDamage(attackDamage);
         }
-        animator.SetBool(IS_ATTACK_PARAM, true);
+        animator.SetTrigger(IS_ATTACK_PARAM);
     }
 
+    //Draw range
     void OnDrawGizmosSelected()
     {
         if (attackPoint == null) return;

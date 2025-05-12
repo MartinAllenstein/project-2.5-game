@@ -7,7 +7,7 @@ public class PlayerControls : MonoBehaviour
 {
     [SerializeField] private int speed;
     [SerializeField] private Animator animator;
-    [SerializeField] private SpriteRenderer playerSprite;
+    //[SerializeField] private SpriteRenderer playerSprite;
     [SerializeField] private LayerMask grassLayer;
     [SerializeField] private int stapsInGrass;
     [SerializeField] private int minStapsToEncounter;
@@ -21,6 +21,8 @@ public class PlayerControls : MonoBehaviour
 
     //Animation Parameters
     private const string IS_WALK_PARAM = "IsWalk";
+    private const string IN_PUT_X_PARAM = "InputX";
+    private const string IN_PUT_Z_PARAM = "InputZ";
     private const string IS_JUMP_PARAM = "IsJump";
 
     //Scenes
@@ -46,17 +48,19 @@ public class PlayerControls : MonoBehaviour
         movement = new Vector3(x, 0, z).normalized;
 
         animator.SetBool(IS_WALK_PARAM, movement != Vector3.zero);
+        animator.SetFloat(IN_PUT_X_PARAM, movement.x);
+        animator.SetFloat(IN_PUT_Z_PARAM, movement.z);
 
         //Flip Player
-        if (x != 0 && x != 0)
-        {
-            playerSprite.flipX = true;
-        }
-
-        if (x != 0 && x > 0)
-        {
-            playerSprite.flipX = false;
-        }
+        // if (x != 0 && x != 0)
+        // {
+        //     playerSprite.flipX = true;
+        // }
+        //
+        // if (x != 0 && x > 0)
+        // {
+        //     playerSprite.flipX = false;
+        // }
     }
 
     private void FixedUpdate()
@@ -66,6 +70,7 @@ public class PlayerControls : MonoBehaviour
         Collider[] colliders = Physics.OverlapSphere(transform.position, 1, grassLayer);
         movingInGrass = colliders.Length != 0 && movement != Vector3.zero;
 
+        //Monster In Grass
         if (movingInGrass == true)
         {
             stapTimer += Time.fixedDeltaTime;
