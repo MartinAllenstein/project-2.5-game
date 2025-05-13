@@ -4,7 +4,7 @@ using UnityEngine.InputSystem;
 
 public class PlayerCombat : MonoBehaviour
 {
-    [SerializeField] private Animator animator;
+    [SerializeField]private Animator animator;
     
     //Attack
     public Transform attackPoint; 
@@ -19,6 +19,11 @@ public class PlayerCombat : MonoBehaviour
     //Animation Parameters
     private const string IS_ATTACK_PARAM = "Attack";
 
+    void Start()
+    {
+        //animator = GetComponent<Animator>();
+    }
+
     void Update()
     {
         if (Time.time >= nextAttackTime)
@@ -29,8 +34,6 @@ public class PlayerCombat : MonoBehaviour
                 nextAttackTime = Time.time + 1f / attackRate;
             }
         }
-        
-        //Debug.DrawRay(attackPoint.position, attackPoint.forward * attackRange, Color.red,3f);
     }
     
     void Attack()

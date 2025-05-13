@@ -5,6 +5,11 @@ using Random = UnityEngine.Random;
 
 public class PlayerControls : MonoBehaviour
 {
+    [SerializeField]private int maxHealth = 100;
+    private int currentHealth;
+    
+    [SerializeField]private HealthBar healthBar;
+    
     [SerializeField] private int speed;
     [SerializeField] private Animator animator;
     //[SerializeField] private SpriteRenderer playerSprite;
@@ -18,6 +23,8 @@ public class PlayerControls : MonoBehaviour
     private bool movingInGrass;
     private float stapTimer;
     private int stapsToEncounter;
+    
+    
 
     //Animation Parameters
     private const string IS_WALK_PARAM = "IsWalk";
@@ -38,6 +45,9 @@ public class PlayerControls : MonoBehaviour
     void Start()
     {
         rb = GetComponent<Rigidbody>();
+        
+        currentHealth = maxHealth;
+        healthBar.SetMaxHealth(maxHealth);
     }
 
     void Update()
@@ -61,6 +71,7 @@ public class PlayerControls : MonoBehaviour
         // {
         //     playerSprite.flipX = false;
         // }
+        
     }
 
     private void FixedUpdate()
@@ -91,4 +102,24 @@ public class PlayerControls : MonoBehaviour
     {
         stapsToEncounter = Random.Range(minStapsToEncounter, maxStapsToEncounter);
     }
+
+    
+    public void TakeDamage(int damage)
+    {
+        currentHealth -= damage;
+        
+        healthBar.SetHealth(currentHealth);
+        
+        if (currentHealth <= 0)
+        {
+            Die();
+        }
+    }
+    
+    void Die()
+    {
+        Debug.Log("Player died!");
+        GetComponent<PlayerControls>().enabled = false;
+    }
+    
 }

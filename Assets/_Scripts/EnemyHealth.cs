@@ -18,7 +18,7 @@ public class EnemyHealth : MonoBehaviour
 
     void Update()
     {
-        LookAtPlayer();
+        //LookAtPlayer();
     }
 
     public void TakeDamage(int damage)
@@ -47,24 +47,24 @@ public class EnemyHealth : MonoBehaviour
         //Destroy(gameObject);
     }
 
-    [SerializeField] private SpriteRenderer enemySprite;
-    public Transform player;
-    public bool isFlipped = false;
+    // [SerializeField] private SpriteRenderer enemySprite;
+    // public Transform player;
+    // public bool isFlipped = false;
     
     //Flip Enemy
-    public void LookAtPlayer()
-    {
-        Vector3 flipped = transform.localScale;
-        flipped.x *= -1;
-        if (transform.position.x > player.position.x && enemySprite)
-        {
-            enemySprite.flipX = true;
-        }
-        else if (transform.position.x < player.position.x && !enemySprite)
-        {
-            enemySprite.flipX = false;
-        }
-    }
+    // public void LookAtPlayer()
+    // {
+    //     Vector3 flipped = transform.localScale;
+    //     flipped.x *= -1;
+    //     if (transform.position.x > player.position.x && enemySprite)
+    //     {
+    //         enemySprite.flipX = true;
+    //     }
+    //     else if (transform.position.x < player.position.x && !enemySprite)
+    //     {
+    //         enemySprite.flipX = false;
+    //     }
+    // }
     
     // if (x != 0 && x != 0)
     // {
