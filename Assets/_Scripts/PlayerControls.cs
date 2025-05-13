@@ -110,6 +110,8 @@ public class PlayerControls : MonoBehaviour
         
         healthBar.SetHealth(currentHealth);
         
+        animator.SetTrigger("Hurt");
+        
         if (currentHealth <= 0)
         {
             Die();
@@ -118,7 +120,8 @@ public class PlayerControls : MonoBehaviour
     
     void Die()
     {
-        Debug.Log("Player died!");
+        animator.SetBool("IsDead", true);
+        //GetComponent<Animator>().enabled = false;
         GetComponent<PlayerControls>().enabled = false;
     }
     
