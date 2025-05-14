@@ -10,12 +10,21 @@ public class EnemyAI : MonoBehaviour
     public int attackDamage = 10;              // ความเสียหายจากการโจมตี
     public float waitTimeAtPoint = 2f;           // เวลาหยุดรอเมื่อเดินถึงจุด
     
+    
+    public Transform attackPoint;                // จุดที่ใช้ตรวจสอบการโจมตี
+    public Vector3 attackBoxSize = new Vector3(1f, 1f, 1f); // ขนาด hitbox
+    public float attackWarningTime = 0.5f;       // เวลาแสดงพื้นที่สีแดงก่อนโจมตี
+    public GameObject attackWarningPrefab;       // พื้นที่สีแดงแจ้งเตือน
+    private BoxCollider attackCollider;
+    
+    private GameObject attackWarningInstance;    // อินสแตนซ์ของพื้นที่สีแดง
+    
     private Vector3 initialPosition;             // ตำแหน่งเริ่มต้นสำหรับสุ่มเดิน
     private Vector3 patrolTarget;                // ตำแหน่งเป้าหมายที่เดินไป
     private bool isWaiting = false;              // รอเวลาอยู่ ณ จุดสุ่ม
     private float waitTimer = 0f;
     private bool hasTarget = false;
-
+    
     private bool isAttacking = false;            // ป้องกันการโจมตีซ้ำ
     private Transform player;                    // ผู้เล่น
 
@@ -26,6 +35,13 @@ public class EnemyAI : MonoBehaviour
         initialPosition = transform.position;
         player = GameObject.FindGameObjectWithTag("Player")?.transform;
         animator = GetComponent<Animator>();
+        
+        // อ่าน Collider จาก attackPoint
+        attackCollider = attackPoint.GetComponent<BoxCollider>();
+        if (attackCollider != null)
+        {
+            attackBoxSize = attackCollider.size;
+        }
     }
 
     void Update()
@@ -37,12 +53,21 @@ public class EnemyAI : MonoBehaviour
         if (distanceToPlayer <= detectionRadius)
         {
             // ถ้าผู้เล่นอยู่ในระยะ ตรวจสอบการโจมตี
-            if (!isAttacking)
+            // if (!isAttacking)
+            // {
+            //     StartCoroutine(AttackPlayer());
+            // }
+            // หยุดอนิเมชันเดินเมื่อเข้าสู่โหมดโจมตี
+            //animator.SetBool("IsWalk", false);
+            
+            // เดินหา player
+            ChasePlayer();
+
+            // เริ่มโจมตีถ้าเข้าใกล้พอ และยังไม่โจมตี
+            if (!isAttacking && distanceToPlayer < attackBoxSize.x)
             {
                 StartCoroutine(AttackPlayer());
             }
-            // หยุดอนิเมชันเดินเมื่อเข้าสู่โหมดโจมตี
-            animator.SetBool("IsWalk", false);
         }
         else
         {
@@ -52,6 +77,7 @@ public class EnemyAI : MonoBehaviour
 
     void Patrol()
     {
+        if (isAttacking) return; // ไม่ให้เดินถ้ากำลังโจมตี
         if (!hasTarget || Vector3.Distance(transform.position, patrolTarget) < 0.1f)
         {
             if (!isWaiting)
@@ -91,13 +117,44 @@ public class EnemyAI : MonoBehaviour
     IEnumerator AttackPlayer()
     {
         isAttacking = true;
+        
+        animator.SetBool("IsWalk", false);
+        
+        // ตำแหน่งแสดงเอฟเฟกต์เตือน → ชิดพื้น BoxCollider
+        Vector3 warningPosition = attackPoint.position - new Vector3(0, attackBoxSize.y - attackBoxSize.y, 0);
 
-        animator.SetTrigger("Attack");
+        // แสดงพื้นที่เตือนก่อนโจมตี
+        if (attackWarningPrefab != null)
+        {
+            attackWarningInstance = Instantiate(attackWarningPrefab, warningPosition, attackPoint.rotation, transform);
 
-        // ตรวจว่า player มีคอมโพเนนต์ Health แล้วส่งดาเมจ (คุณต้องมี PlayerHealth script)
-        player.GetComponent<PlayerControls>()?.TakeDamage(attackDamage);
+            // ตั้งขนาดให้เท่ากับ attackBoxSize
+            attackWarningInstance.transform.localScale = new Vector3(attackBoxSize.x, attackBoxSize.y, attackBoxSize.z);
+        }
 
+
+        yield return new WaitForSeconds(attackWarningTime);
+
+        if (attackWarningInstance != null)
+        {
+            Destroy(attackWarningInstance);
+        }
+        
+        // ตรวจสอบผู้เล่นภายใน hitbox
+        Collider[] hits = Physics.OverlapBox(attackPoint.position, attackBoxSize, attackPoint.rotation);
+        foreach (Collider hit in hits)
+        {
+            //if (hit.CompareTag("Player"))
+            
+                // ตรวจว่า player มีคอมโพเนนต์ Health แล้วส่งดาเมจ (ต้องมี PlayerControls script)
+                hit.GetComponent<PlayerControls>()?.TakeDamage(attackDamage);
+                Debug.Log("Enemy hit player with attack box!");
+                animator.SetTrigger("Attack");
+            
+        }
+        
         yield return new WaitForSeconds(attackCooldown);
+        
         isAttacking = false;
     }
 
@@ -107,5 +164,37 @@ public class EnemyAI : MonoBehaviour
         Gizmos.DrawWireSphere(transform.position, detectionRadius);
         Gizmos.color = Color.cyan;
         Gizmos.DrawWireSphere(initialPosition == Vector3.zero ? transform.position : initialPosition, patrolRadius);
+        
+        // แสดง hitbox
+        if (attackPoint != null)
+        {
+            Gizmos.color = Color.red;
+            Gizmos.DrawWireCube(attackPoint.position, attackBoxSize);
+        }
     }
+    
+    void ChasePlayer()
+    {
+        if (isAttacking) return; // ไม่ให้เดินถ้ากำลังโจมตี
+        
+        Vector3 direction = (player.position - transform.position).normalized;
+        
+        // ปรับการเคลื่อนที่
+        Vector3 move = direction * patrolSpeed * Time.deltaTime;
+        move.y = 0; // ล็อคแกน Y ไม่ให้ enemy จม
+        
+        transform.position += move;
+
+        // หมุนไปในทิศทางที่เดิน (สำหรับ sprite 2D หันซ้าย-ขวา)
+        if (direction.x != 0)
+        {
+            Vector3 scale = transform.localScale;
+            scale.x = Mathf.Sign(direction.x) * Mathf.Abs(scale.x);
+            transform.localScale = scale;
+        }
+        
+        animator.SetBool("IsWalk", true);
+        
+    }
+
 }

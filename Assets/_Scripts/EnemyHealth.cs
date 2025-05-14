@@ -27,7 +27,7 @@ public class EnemyHealth : MonoBehaviour
         
         animator.SetTrigger(IS_HURT_PARAM);
         
-        Debug.Log(name + " took " + damage + " damage!");
+        //Debug.Log(name + " took " + damage + " damage!");
 
         if (currentHealth <= 0)
         {
@@ -38,11 +38,11 @@ public class EnemyHealth : MonoBehaviour
     void Die()
     {
         animator.SetBool(IS_DEAD_PARAM,true);
-        
-        Debug.Log(name + " died!");
-        
+
+        //GetComponent<Transform>().position.Set(0,0,0);
         GetComponent<Collider>().enabled = false;
-        this.enabled = false;
+        GetComponent<EnemyAI>().enabled = false;
+        //this.enabled = false;
         
         //Destroy(gameObject);
     }
